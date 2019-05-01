@@ -31,16 +31,28 @@ func NewClient(ctx context.Context, projectID string, opts ...option.ClientOptio
 	}, nil
 }
 
-func (c *Client) DocSnapshot(ctx context.Context, group api.Grouping) (*firestore.DocumentSnapshot, error) {
-	return c.store.Collection(group.Category()).Doc(group.Identifier()).Get(ctx)
+func (c *Client) Collection(ctx context.Context, cat api.Categorizer) *firestore.CollectionRef {
+	return c.store.Collection(cat.Category())
 }
 
-func (c *Client) DocRef(ctx context.Context, group api.Grouping) *firestore.DocumentRef {
+func (c *Client) Collections(ctx context.Context) *firestore.CollectionIterator {
+	return c.store.Collections(ctx)
+}
+
+func (c *Client) Documents(ctx context.Context, cat api.Categorizer) *firestore.DocumentIterator {
+	return c.Collection(ctx, cat).Documents(ctx)
+}
+
+func (c *Client) DocSnapshot(ctx context.Context, group api.Grouping) (*firestore.DocumentSnapshot, error) {
+	return c.Document(ctx, group).Get(ctx)
+}
+
+func (c *Client) Document(ctx context.Context, group api.Grouping) *firestore.DocumentRef {
 	return c.store.Collection(group.Category()).Doc(group.Identifier())
 }
 
 func (c *Client) MarshalDocTo(ctx context.Context, group api.Grouping, obj interface{}) error {
-	snap, err := c.store.Collection(group.Category()).Doc(group.Identifier()).Get(ctx)
+	snap, err := c.Document(ctx, group).Get(ctx)
 	if err != nil {
 		return err
 	}
@@ -48,7 +60,7 @@ func (c *Client) MarshalDocTo(ctx context.Context, group api.Grouping, obj inter
 }
 
 func (c *Client) DocDataAt(ctx context.Context, group api.Grouping, key string) (interface{}, error) {
-	snap, err := c.store.Collection(group.Category()).Doc(group.Identifier()).Get(ctx)
+	snap, err := c.Document(ctx, group).Get(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +68,7 @@ func (c *Client) DocDataAt(ctx context.Context, group api.Grouping, key string) 
 }
 
 func (c *Client) DocData(ctx context.Context, group api.Grouping) (map[string]interface{}, error) {
-	snap, err := c.store.Collection(group.Category()).Doc(group.Identifier()).Get(ctx)
+	snap, err := c.Document(ctx, group).Get(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +76,7 @@ func (c *Client) DocData(ctx context.Context, group api.Grouping) (map[string]in
 }
 
 func (c *Client) UpdateDocField(ctx context.Context, group api.Grouping, key string, value string) error {
-	_, err := c.store.Collection(group.Category()).Doc(group.Identifier()).Update(ctx, []firestore.Update{
+	_, err := c.Document(ctx, group).Update(ctx, []firestore.Update{
 		{
 			Path:  key,
 			Value: value,
@@ -77,7 +89,7 @@ func (c *Client) UpdateDocField(ctx context.Context, group api.Grouping, key str
 }
 
 func (c *Client) CreateDoc(ctx context.Context, group api.Grouping, data map[string]interface{}) error {
-	_, err := c.store.Collection(group.Category()).Doc(group.Identifier()).Create(ctx, data)
+	_, err := c.Document(ctx, group).Create(ctx, data)
 	if err != nil {
 		return err
 	}
@@ -85,7 +97,7 @@ func (c *Client) CreateDoc(ctx context.Context, group api.Grouping, data map[str
 }
 
 func (c *Client) DeleteDoc(ctx context.Context, group api.Grouping) error {
-	_, err := c.store.Collection(group.Category()).Doc(group.Identifier()).Delete(ctx)
+	_, err := c.Document(ctx, group).Delete(ctx)
 	if err != nil {
 		return err
 	}
@@ -94,13 +106,13 @@ func (c *Client) DeleteDoc(ctx context.Context, group api.Grouping) error {
 
 func (c *Client) SetDocData(ctx context.Context, group api.Grouping, data map[string]interface{}, merge bool) error {
 	if merge {
-		_, err := c.store.Collection(group.Category()).Doc(group.Identifier()).Set(ctx, data, firestore.MergeAll)
+		_, err := c.Document(ctx, group).Set(ctx, data, firestore.MergeAll)
 		if err != nil {
 			return err
 		}
 		return nil
 	} else {
-		_, err := c.store.Collection(group.Category()).Doc(group.Identifier()).Set(ctx, data)
+		_, err := c.Document(ctx, group).Set(ctx, data)
 		if err != nil {
 			return err
 		}
@@ -193,3 +205,24 @@ func (c *Client) BucketOsbject(ctx context.Context, cat api.Categorizer) *storag
 func (c *Client) Buckets(ctx context.Context) *storage.BucketIterator {
 	return c.blob.Buckets(ctx, c.proj)
 }
+
+func (c *Client) HandleBucket(ctx context.Context, cat api.Categorizer, fn BucketHandlerFunc) error {
+	return fn(c.Bucket(ctx, cat))
+}
+
+func (c *Client) HandleObject(ctx context.Context, group api.Grouping, fn ObjectHandlerFunc) error {
+	return fn(c.Object(ctx, group))
+}
+
+func (c *Client) HandleCollection(ctx context.Context, cat api.Categorizer, fn CollectionHandlerFunc) error {
+	return fn(c.Collection(ctx, cat))
+}
+
+func (c *Client) HandleDocument(ctx context.Context, group api.Grouping, fn DocumentHandlerFunc) error {
+	return fn(c.Document(ctx, group))
+}
+
+type BucketHandlerFunc func(b *storage.BucketHandle) error
+type ObjectHandlerFunc func(b *storage.ObjectHandle) error
+type CollectionHandlerFunc func(b *firestore.CollectionRef) error
+type DocumentHandlerFunc func(b *firestore.DocumentRef) error

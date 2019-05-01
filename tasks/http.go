@@ -135,3 +135,9 @@ func (c *Client) GetTopic(ctx context.Context, cat api.Categorizer) (*pubsub.Top
 	}
 	return t, nil
 }
+
+func (c *Client) HandleTask(tsk *taskspb.Task, fn TaskHandleFunc) error {
+	return fn(c)(tsk)
+}
+
+type TaskHandleFunc func(c *Client) func(fn *taskspb.Task) error
