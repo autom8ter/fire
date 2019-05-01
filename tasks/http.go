@@ -29,6 +29,7 @@ func NewClient(ctx context.Context, project string, opts ...option.ClientOption)
 	return &Client{
 		Tasks:     tasks,
 		Publisher: pub,
+		Project:   project,
 	}, nil
 }
 
