@@ -44,11 +44,22 @@ func (c *Client) Set(ctx context.Context, d Document, merge bool) error {
 func (c *Client) Snapshot(ctx context.Context, d Document) (*firestore.DocumentSnapshot, error) {
 	return  c.Fire.Collection(d.DocCategory()).Doc(d.DocName()).Get(ctx)
 }
+
 func (c *Client) Ref(ctx context.Context, d Document) (*firestore.DocumentRef) {
 	return  c.Fire.Collection(d.DocCategory()).Doc(d.DocName())
 }
+
 func (c *Client) Create(ctx context.Context, d Document) (error) {
 	_, err :=  c.Fire.Collection(d.DocCategory()).Doc(d.DocName()).Create(ctx, d.DocData())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+
+func (c *Client) Delete(ctx context.Context, d Document) (error) {
+	_, err :=  c.Fire.Collection(d.DocCategory()).Doc(d.DocName()).Delete(ctx)
 	if err != nil {
 		return err
 	}
