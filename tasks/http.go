@@ -1,3 +1,5 @@
+//go:generate godocdown -o README.md
+
 package tasks
 
 import (
@@ -5,7 +7,7 @@ import (
 	"cloud.google.com/go/pubsub"
 	"context"
 	"fmt"
-	"github.com/autom8ter/fire/api"
+	"github.com/autom8ter/api/driver"
 	"github.com/autom8ter/fire/util"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/api/option"
@@ -34,7 +36,7 @@ func NewClient(ctx context.Context, project string, opts ...option.ClientOption)
 	}, nil
 }
 
-func (c *Client) CreateHTTPTask(ctx context.Context, h api.JSONTask) (*taskspb.Task, error) {
+func (c *Client) CreateHTTPTask(ctx context.Context, h driver.JSONTask) (*taskspb.Task, error) {
 	var meth taskspb.HttpMethod
 	switch h.Method() {
 	case "POST":
@@ -78,7 +80,7 @@ func (c *Client) QueuePath(location, que string) string {
 	return fmt.Sprintf("projects/%s/locations/%s/queues/%s", c.proj, location, que)
 }
 
-func (c *Client) Publish(ctx context.Context, message api.Message) (string, error) {
+func (c *Client) Publish(ctx context.Context, message driver.Message) (string, error) {
 	t, err := c.GetTopic(ctx, message)
 	if err != nil {
 		return "", err
@@ -92,7 +94,7 @@ func (c *Client) Publish(ctx context.Context, message api.Message) (string, erro
 	return r.Get(ctx)
 }
 
-func (c *Client) PublishJSON(ctx context.Context, message api.JSONMessage) (string, error) {
+func (c *Client) PublishJSON(ctx context.Context, message driver.JSONMessage) (string, error) {
 	t, err := c.GetTopic(ctx, message)
 	if err != nil {
 		return "", err
@@ -106,7 +108,7 @@ func (c *Client) PublishJSON(ctx context.Context, message api.JSONMessage) (stri
 	return r.Get(ctx)
 }
 
-func (c *Client) PublishProto(ctx context.Context, message api.ProtoMessage) (string, error) {
+func (c *Client) PublishProto(ctx context.Context, message driver.ProtoMessage) (string, error) {
 	t, err := c.GetTopic(ctx, message)
 	if err != nil {
 		return "", err
@@ -121,7 +123,7 @@ func (c *Client) PublishProto(ctx context.Context, message api.ProtoMessage) (st
 	return r.Get(ctx)
 }
 
-func (c *Client) GetTopic(ctx context.Context, cat api.Categorizer) (*pubsub.Topic, error) {
+func (c *Client) GetTopic(ctx context.Context, cat driver.Categorizer) (*pubsub.Topic, error) {
 	t := c.pub.Topic(cat.Category())
 	ok, err := t.Exists(ctx)
 	if err != nil {

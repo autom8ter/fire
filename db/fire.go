@@ -1,10 +1,12 @@
+//go:generate godocdown -o README.md
+
 package db
 
 import (
 	"cloud.google.com/go/firestore"
 	"cloud.google.com/go/storage"
 	"context"
-	"github.com/autom8ter/fire/api"
+	"github.com/autom8ter/api/driver"
 	"google.golang.org/api/option"
 	"io"
 )
@@ -31,7 +33,7 @@ func NewClient(ctx context.Context, projectID string, opts ...option.ClientOptio
 	}, nil
 }
 
-func (c *Client) Collection(ctx context.Context, cat api.Categorizer) *firestore.CollectionRef {
+func (c *Client) Collection(ctx context.Context, cat driver.Categorizer) *firestore.CollectionRef {
 	return c.store.Collection(cat.Category())
 }
 
@@ -39,19 +41,19 @@ func (c *Client) Collections(ctx context.Context) *firestore.CollectionIterator 
 	return c.store.Collections(ctx)
 }
 
-func (c *Client) Documents(ctx context.Context, cat api.Categorizer) *firestore.DocumentIterator {
+func (c *Client) Documents(ctx context.Context, cat driver.Categorizer) *firestore.DocumentIterator {
 	return c.Collection(ctx, cat).Documents(ctx)
 }
 
-func (c *Client) DocSnapshot(ctx context.Context, group api.Grouping) (*firestore.DocumentSnapshot, error) {
+func (c *Client) DocSnapshot(ctx context.Context, group driver.Grouping) (*firestore.DocumentSnapshot, error) {
 	return c.Document(ctx, group).Get(ctx)
 }
 
-func (c *Client) Document(ctx context.Context, group api.Grouping) *firestore.DocumentRef {
+func (c *Client) Document(ctx context.Context, group driver.Grouping) *firestore.DocumentRef {
 	return c.store.Collection(group.Category()).Doc(group.Identifier())
 }
 
-func (c *Client) MarshalDocTo(ctx context.Context, group api.Grouping, obj interface{}) error {
+func (c *Client) MarshalDocTo(ctx context.Context, group driver.Grouping, obj interface{}) error {
 	snap, err := c.Document(ctx, group).Get(ctx)
 	if err != nil {
 		return err
@@ -59,7 +61,7 @@ func (c *Client) MarshalDocTo(ctx context.Context, group api.Grouping, obj inter
 	return snap.DataTo(obj)
 }
 
-func (c *Client) DocDataAt(ctx context.Context, group api.Grouping, key string) (interface{}, error) {
+func (c *Client) DocDataAt(ctx context.Context, group driver.Grouping, key string) (interface{}, error) {
 	snap, err := c.Document(ctx, group).Get(ctx)
 	if err != nil {
 		return nil, err
@@ -67,7 +69,7 @@ func (c *Client) DocDataAt(ctx context.Context, group api.Grouping, key string) 
 	return snap.DataAt(key)
 }
 
-func (c *Client) DocData(ctx context.Context, group api.Grouping) (map[string]interface{}, error) {
+func (c *Client) DocData(ctx context.Context, group driver.Grouping) (map[string]interface{}, error) {
 	snap, err := c.Document(ctx, group).Get(ctx)
 	if err != nil {
 		return nil, err
@@ -75,7 +77,7 @@ func (c *Client) DocData(ctx context.Context, group api.Grouping) (map[string]in
 	return snap.Data(), nil
 }
 
-func (c *Client) UpdateDocField(ctx context.Context, group api.Grouping, key string, value string) error {
+func (c *Client) UpdateDocField(ctx context.Context, group driver.Grouping, key string, value string) error {
 	_, err := c.Document(ctx, group).Update(ctx, []firestore.Update{
 		{
 			Path:  key,
@@ -88,7 +90,7 @@ func (c *Client) UpdateDocField(ctx context.Context, group api.Grouping, key str
 	return nil
 }
 
-func (c *Client) CreateDoc(ctx context.Context, group api.Grouping, data map[string]interface{}) error {
+func (c *Client) CreateDoc(ctx context.Context, group driver.Grouping, data map[string]interface{}) error {
 	_, err := c.Document(ctx, group).Create(ctx, data)
 	if err != nil {
 		return err
@@ -96,7 +98,7 @@ func (c *Client) CreateDoc(ctx context.Context, group api.Grouping, data map[str
 	return nil
 }
 
-func (c *Client) DeleteDoc(ctx context.Context, group api.Grouping) error {
+func (c *Client) DeleteDoc(ctx context.Context, group driver.Grouping) error {
 	_, err := c.Document(ctx, group).Delete(ctx)
 	if err != nil {
 		return err
@@ -104,7 +106,7 @@ func (c *Client) DeleteDoc(ctx context.Context, group api.Grouping) error {
 	return nil
 }
 
-func (c *Client) SetDocData(ctx context.Context, group api.Grouping, data map[string]interface{}, merge bool) error {
+func (c *Client) SetDocData(ctx context.Context, group driver.Grouping, data map[string]interface{}, merge bool) error {
 	if merge {
 		_, err := c.Document(ctx, group).Set(ctx, data, firestore.MergeAll)
 		if err != nil {
@@ -120,29 +122,29 @@ func (c *Client) SetDocData(ctx context.Context, group api.Grouping, data map[st
 	}
 }
 
-func (c *Client) Object(ctx context.Context, group api.Grouping) *storage.ObjectHandle {
+func (c *Client) Object(ctx context.Context, group driver.Grouping) *storage.ObjectHandle {
 	return c.blob.Bucket(group.Category()).Object(group.Identifier())
 }
 
-func (c *Client) CopyFromObject(ctx context.Context, from api.Grouping, to api.Grouping) *storage.Copier {
+func (c *Client) CopyFromObject(ctx context.Context, from driver.Grouping, to driver.Grouping) *storage.Copier {
 	return c.blob.Bucket(to.Category()).Object(to.Identifier()).CopierFrom(c.Object(ctx, from))
 }
 
-func (c *Client) DeleteObject(ctx context.Context, group api.Grouping) error {
+func (c *Client) DeleteObject(ctx context.Context, group driver.Grouping) error {
 	return c.Object(ctx, group).Delete(ctx)
 }
 
-func (c *Client) UpdateObjectMetadata(ctx context.Context, metagroup api.MetaGrouping) (*storage.ObjectAttrs, error) {
+func (c *Client) UpdateObjectMetadata(ctx context.Context, metagroup driver.MetaGrouping) (*storage.ObjectAttrs, error) {
 	return c.Object(ctx, metagroup).Update(ctx, storage.ObjectAttrsToUpdate{
 		Metadata: metagroup.Meta(),
 	})
 }
 
-func (c *Client) ObjectAttributes(ctx context.Context, metagroup api.MetaGrouping) (*storage.ObjectAttrs, error) {
+func (c *Client) ObjectAttributes(ctx context.Context, metagroup driver.MetaGrouping) (*storage.ObjectAttrs, error) {
 	return c.Object(ctx, metagroup).Attrs(ctx)
 }
 
-func (c *Client) GetObjectMetadata(ctx context.Context, metagroup api.MetaGrouping) (map[string]string, error) {
+func (c *Client) GetObjectMetadata(ctx context.Context, metagroup driver.MetaGrouping) (map[string]string, error) {
 	attrs, err := c.Object(ctx, metagroup).Attrs(ctx)
 	if err != nil {
 		return nil, err
@@ -150,27 +152,27 @@ func (c *Client) GetObjectMetadata(ctx context.Context, metagroup api.MetaGroupi
 	return attrs.Metadata, nil
 }
 
-func (c *Client) Bucket(ctx context.Context, cat api.Categorizer) *storage.BucketHandle {
+func (c *Client) Bucket(ctx context.Context, cat driver.Categorizer) *storage.BucketHandle {
 	return c.blob.Bucket(cat.Category())
 }
 
-func (c *Client) CreateBucket(ctx context.Context, cat api.Categorizer) error {
+func (c *Client) CreateBucket(ctx context.Context, cat driver.Categorizer) error {
 	return c.blob.Bucket(cat.Category()).Create(ctx, c.proj, nil)
 }
 
-func (c *Client) ObjectsBucketName(ctx context.Context, grp api.Grouping) string {
+func (c *Client) ObjectsBucketName(ctx context.Context, grp driver.Grouping) string {
 	return c.Object(ctx, grp).BucketName()
 }
 
-func (c *Client) ObjectWriter(ctx context.Context, grp api.Grouping) *storage.Writer {
+func (c *Client) ObjectWriter(ctx context.Context, grp driver.Grouping) *storage.Writer {
 	return c.Object(ctx, grp).NewWriter(ctx)
 }
 
-func (c *Client) ObjectReader(ctx context.Context, grp api.Grouping) (*storage.Reader, error) {
+func (c *Client) ObjectReader(ctx context.Context, grp driver.Grouping) (*storage.Reader, error) {
 	return c.Object(ctx, grp).NewReader(ctx)
 }
 
-func (c *Client) CopyObjectTo(ctx context.Context, dst io.Writer, grp api.Grouping) error {
+func (c *Client) CopyObjectTo(ctx context.Context, dst io.Writer, grp driver.Grouping) error {
 	r, err := c.ObjectReader(ctx, grp)
 	if err != nil {
 		return err
@@ -182,7 +184,7 @@ func (c *Client) CopyObjectTo(ctx context.Context, dst io.Writer, grp api.Groupi
 	return nil
 }
 
-func (c *Client) CopyToObjectFrom(ctx context.Context, from io.Reader, grp api.Grouping) error {
+func (c *Client) CopyToObjectFrom(ctx context.Context, from io.Reader, grp driver.Grouping) error {
 	_, err := io.Copy(c.ObjectWriter(ctx, grp), from)
 	if err != nil {
 		return err
@@ -190,15 +192,15 @@ func (c *Client) CopyToObjectFrom(ctx context.Context, from io.Reader, grp api.G
 	return nil
 }
 
-func (c *Client) DeleteBucket(ctx context.Context, cat api.Categorizer) error {
+func (c *Client) DeleteBucket(ctx context.Context, cat driver.Categorizer) error {
 	return c.Bucket(ctx, cat).Delete(ctx)
 }
 
-func (c *Client) UpdateBucket(ctx context.Context, cat api.Categorizer, attr storage.BucketAttrsToUpdate) (*storage.BucketAttrs, error) {
+func (c *Client) UpdateBucket(ctx context.Context, cat driver.Categorizer, attr storage.BucketAttrsToUpdate) (*storage.BucketAttrs, error) {
 	return c.Bucket(ctx, cat).Update(ctx, attr)
 }
 
-func (c *Client) BucketOsbject(ctx context.Context, cat api.Categorizer) *storage.ObjectIterator {
+func (c *Client) BucketOsbject(ctx context.Context, cat driver.Categorizer) *storage.ObjectIterator {
 	return c.Bucket(ctx, cat).Objects(ctx, nil)
 }
 
@@ -206,19 +208,19 @@ func (c *Client) Buckets(ctx context.Context) *storage.BucketIterator {
 	return c.blob.Buckets(ctx, c.proj)
 }
 
-func (c *Client) HandleBucket(ctx context.Context, cat api.Categorizer, fn BucketHandlerFunc) error {
+func (c *Client) HandleBucket(ctx context.Context, cat driver.Categorizer, fn BucketHandlerFunc) error {
 	return fn(c.Bucket(ctx, cat))
 }
 
-func (c *Client) HandleObject(ctx context.Context, group api.Grouping, fn ObjectHandlerFunc) error {
+func (c *Client) HandleObject(ctx context.Context, group driver.Grouping, fn ObjectHandlerFunc) error {
 	return fn(c.Object(ctx, group))
 }
 
-func (c *Client) HandleCollection(ctx context.Context, cat api.Categorizer, fn CollectionHandlerFunc) error {
+func (c *Client) HandleCollection(ctx context.Context, cat driver.Categorizer, fn CollectionHandlerFunc) error {
 	return fn(c.Collection(ctx, cat))
 }
 
-func (c *Client) HandleDocument(ctx context.Context, group api.Grouping, fn DocumentHandlerFunc) error {
+func (c *Client) HandleDocument(ctx context.Context, group driver.Grouping, fn DocumentHandlerFunc) error {
 	return fn(c.Document(ctx, group))
 }
 
