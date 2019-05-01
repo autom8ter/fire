@@ -6,7 +6,6 @@ import (
 	"cloud.google.com/go/pubsub"
 	"context"
 	"github.com/autom8ter/api/driver"
-	"github.com/autom8ter/fire/util"
 	"google.golang.org/api/option"
 )
 
@@ -41,34 +40,6 @@ func (c *Client) Publish(ctx context.Context, message driver.Message) (string, e
 	return r.Get(ctx)
 }
 
-func (c *Client) PublishJSON(ctx context.Context, message driver.JSONMessage) (string, error) {
-	t, err := c.GetTopic(ctx, message)
-	if err != nil {
-		return "", err
-	}
-	r := t.Publish(ctx, &pubsub.Message{
-		ID:         message.Identifier(),
-		Data:       []byte(message.JSONString()),
-		Attributes: message.Meta(),
-	})
-
-	return r.Get(ctx)
-}
-
-func (c *Client) PublishProto(ctx context.Context, message driver.ProtoMessage) (string, error) {
-	t, err := c.GetTopic(ctx, message)
-	if err != nil {
-		return "", err
-	}
-
-	r := t.Publish(ctx, &pubsub.Message{
-		ID:         message.Identifier(),
-		Data:       util.Util.MarshalProto(message),
-		Attributes: message.Meta(),
-	})
-
-	return r.Get(ctx)
-}
 
 func (c *Client) GetTopic(ctx context.Context, cat driver.Categorizer) (*pubsub.Topic, error) {
 	t := c.pub.Topic(cat.Category())

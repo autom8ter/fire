@@ -17,6 +17,11 @@ type Client struct {
 	blob  *storage.Client
 }
 
+type BucketHandlerFunc func(b *storage.BucketHandle) error
+type ObjectHandlerFunc func(b *storage.ObjectHandle) error
+type CollectionHandlerFunc func(b *firestore.CollectionRef) error
+type DocumentHandlerFunc func(b *firestore.DocumentRef) error
+
 func NewClient(ctx context.Context, projectID string, opts ...option.ClientOption) (*Client, error) {
 	client, err := firestore.NewClient(ctx, projectID, opts...)
 	if err != nil {
@@ -223,8 +228,3 @@ func (c *Client) HandleCollection(ctx context.Context, cat driver.Categorizer, f
 func (c *Client) HandleDocument(ctx context.Context, group driver.Grouping, fn DocumentHandlerFunc) error {
 	return fn(c.Document(ctx, group))
 }
-
-type BucketHandlerFunc func(b *storage.BucketHandle) error
-type ObjectHandlerFunc func(b *storage.ObjectHandle) error
-type CollectionHandlerFunc func(b *firestore.CollectionRef) error
-type DocumentHandlerFunc func(b *firestore.DocumentRef) error
