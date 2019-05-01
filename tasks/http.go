@@ -84,9 +84,9 @@ func (c *Client) Publish(ctx context.Context, message api.Message) (string, erro
 		return "", err
 	}
 	r := t.Publish(ctx, &pubsub.Message{
-		ID:          message.Identifier(),
-		Data:        []byte(message.String()),
-		Attributes:  message.Meta(),
+		ID:         message.Identifier(),
+		Data:       []byte(message.String()),
+		Attributes: message.Meta(),
 	})
 
 	return r.Get(ctx)
@@ -98,9 +98,9 @@ func (c *Client) PublishJSON(ctx context.Context, message api.JSONMessage) (stri
 		return "", err
 	}
 	r := t.Publish(ctx, &pubsub.Message{
-		ID:          message.Identifier(),
-		Data:        []byte(message.JSONString()),
-		Attributes:  message.Meta(),
+		ID:         message.Identifier(),
+		Data:       []byte(message.JSONString()),
+		Attributes: message.Meta(),
 	})
 
 	return r.Get(ctx)
@@ -113,14 +113,13 @@ func (c *Client) PublishProto(ctx context.Context, message api.ProtoMessage) (st
 	}
 
 	r := t.Publish(ctx, &pubsub.Message{
-		ID:          message.Identifier(),
-		Data:        util.Util.MarshalProto(message),
-		Attributes:  message.Meta(),
+		ID:         message.Identifier(),
+		Data:       util.Util.MarshalProto(message),
+		Attributes: message.Meta(),
 	})
 
 	return r.Get(ctx)
 }
-
 
 func (c *Client) GetTopic(ctx context.Context, cat api.Categorizer) (*pubsub.Topic, error) {
 	t := c.Publisher.Topic(cat.Category())

@@ -35,23 +35,25 @@ type JSONTask interface {
 }
 
 type Metadata interface {
-	Meta()map[string]string
+	Meta() map[string]string
 }
 
 type JSONMessage interface {
-	Grouping
-	Metadata
+	MetaGrouping
 	JSON
 }
 
 type Message interface {
-	Grouping
-	Metadata
+	MetaGrouping
 	String() string
 }
 
 type ProtoMessage interface {
+	MetaGrouping
+	proto.Message
+}
+
+type MetaGrouping interface {
 	Grouping
 	Metadata
-	proto.Message
 }
