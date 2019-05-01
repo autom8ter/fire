@@ -9,8 +9,8 @@
 
 ```go
 type Client struct {
-	DB    *db.Client    `validate:"required"`
-	Tasks *tasks.Client `validate:"required"`
+	DB    *db.Client      `validate:"required"`
+	Tasks *publish.Client `validate:"required"`
 }
 ```
 

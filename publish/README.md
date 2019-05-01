@@ -1,6 +1,6 @@
-# tasks
+# publish
 --
-    import "github.com/autom8ter/fire/tasks"
+    import "github.com/autom8ter/fire/publish"
 
 
 ## Usage
@@ -19,22 +19,10 @@ type Client struct {
 func NewClient(ctx context.Context, project string, opts ...option.ClientOption) (*Client, error)
 ```
 
-#### func (*Client) CreateHTTPTask
-
-```go
-func (c *Client) CreateHTTPTask(ctx context.Context, h driver.JSONTask) (*taskspb.Task, error)
-```
-
 #### func (*Client) GetTopic
 
 ```go
 func (c *Client) GetTopic(ctx context.Context, cat driver.Categorizer) (*pubsub.Topic, error)
-```
-
-#### func (*Client) HandleTask
-
-```go
-func (c *Client) HandleTask(tsk *taskspb.Task, fn TaskHandleFunc) error
 ```
 
 #### func (*Client) Publish
@@ -53,16 +41,4 @@ func (c *Client) PublishJSON(ctx context.Context, message driver.JSONMessage) (s
 
 ```go
 func (c *Client) PublishProto(ctx context.Context, message driver.ProtoMessage) (string, error)
-```
-
-#### func (*Client) QueuePath
-
-```go
-func (c *Client) QueuePath(location, que string) string
-```
-
-#### type TaskHandleFunc
-
-```go
-type TaskHandleFunc func(c *Client) func(fn *taskspb.Task) error
 ```

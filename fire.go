@@ -5,14 +5,14 @@ package fire
 import (
 	"context"
 	"github.com/autom8ter/fire/db"
-	"github.com/autom8ter/fire/tasks"
+	"github.com/autom8ter/fire/publish"
 	"github.com/autom8ter/fire/util"
 	"google.golang.org/api/option"
 )
 
 type Client struct {
-	DB    *db.Client    `validate:"required"`
-	Tasks *tasks.Client `validate:"required"`
+	DB    *db.Client      `validate:"required"`
+	Tasks *publish.Client `validate:"required"`
 }
 
 func (c *Client) Validate() error {
@@ -39,7 +39,7 @@ func NewClient(ctx context.Context, project string, opts ...option.ClientOption)
 	if err != nil {
 		return nil, err
 	}
-	tsks, err := tasks.NewClient(ctx, project, opts...)
+	tsks, err := publish.NewClient(ctx, project, opts...)
 	if err != nil {
 		return nil, err
 	}
