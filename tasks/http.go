@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/autom8ter/fire/api"
+	"github.com/autom8ter/fire/util"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/api/option"
 	taskspb "google.golang.org/genproto/googleapis/cloud/tasks/v2beta3"
@@ -75,4 +76,63 @@ func (c *Client) CreateHTTPTask(ctx context.Context, h api.JSONTask) (*taskspb.T
 
 func (c *Client) QueuePath(location, que string) string {
 	return fmt.Sprintf("projects/%s/locations/%s/queues/%s", c.Project, location, que)
+}
+
+func (c *Client) Publish(ctx context.Context, message api.Message) (string, error) {
+	t, err := c.GetTopic(ctx, message)
+	if err != nil {
+		return "", err
+	}
+	r := t.Publish(ctx, &pubsub.Message{
+		ID:          message.Identifier(),
+		Data:        []byte(message.String()),
+		Attributes:  message.Meta(),
+	})
+
+	return r.Get(ctx)
+}
+
+func (c *Client) PublishJSON(ctx context.Context, message api.JSONMessage) (string, error) {
+	t, err := c.GetTopic(ctx, message)
+	if err != nil {
+		return "", err
+	}
+	r := t.Publish(ctx, &pubsub.Message{
+		ID:          message.Identifier(),
+		Data:        []byte(message.JSONString()),
+		Attributes:  message.Meta(),
+	})
+
+	return r.Get(ctx)
+}
+
+func (c *Client) PublishProto(ctx context.Context, message api.ProtoMessage) (string, error) {
+	t, err := c.GetTopic(ctx, message)
+	if err != nil {
+		return "", err
+	}
+
+	r := t.Publish(ctx, &pubsub.Message{
+		ID:          message.Identifier(),
+		Data:        util.Util.MarshalProto(message),
+		Attributes:  message.Meta(),
+	})
+
+	return r.Get(ctx)
+}
+
+
+func (c *Client) GetTopic(ctx context.Context, cat api.Categorizer) (*pubsub.Topic, error) {
+	t := c.Publisher.Topic(cat.Category())
+	ok, err := t.Exists(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		t, err = c.Publisher.CreateTopic(ctx, cat.Category())
+		if err != nil {
+			return nil, err
+		}
+	}
+	return t, nil
 }

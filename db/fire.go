@@ -3,33 +3,43 @@ package db
 import (
 	"cloud.google.com/go/firestore"
 	"context"
+	"fmt"
 	"github.com/autom8ter/fire/api"
+	"github.com/pkg/errors"
 	"google.golang.org/api/option"
+	"github.com/go-redis/redis"
+	"cloud.google.com/go/storage"
 )
 
 type Client struct {
-	Store *firestore.Client
+	store *firestore.Client
+	blob *storage.Client
 }
 
-func NewClient(ctx context.Context, projectID string, opts ...option.ClientOption) (*Client, error) {
+func NewClient(ctx context.Context, addr string, password string, projectID string, opts ...option.ClientOption) (*Client, error) {
 	client, err := firestore.NewClient(ctx, projectID, opts...)
 	if err != nil {
 		return nil, err
 	}
+	strg, err := storage.NewClient(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
 	return &Client{
-		Store: client,
+		store: client,
+		blob: strg,
 	}, nil
 }
 
-func (c *Client) Set(ctx context.Context, group api.Grouping, data map[string]interface{}, merge bool) error {
+func (c *Client) SetDocData(ctx context.Context, group api.Grouping, data map[string]interface{}, merge bool) error {
 	if merge {
-		_, err := c.Store.Collection(group.Category()).Doc(group.Identifier()).Set(ctx, data, firestore.MergeAll)
+		_, err := c.store.Collection(group.Category()).Doc(group.Identifier()).Set(ctx, data, firestore.MergeAll)
 		if err != nil {
 			return err
 		}
 		return nil
 	} else {
-		_, err := c.Store.Collection(group.Category()).Doc(group.Identifier()).Set(ctx, data)
+		_, err := c.store.Collection(group.Category()).Doc(group.Identifier()).Set(ctx, data)
 		if err != nil {
 			return err
 		}
@@ -38,15 +48,15 @@ func (c *Client) Set(ctx context.Context, group api.Grouping, data map[string]in
 }
 
 func (c *Client) DocSnapshot(ctx context.Context, group api.Grouping) (*firestore.DocumentSnapshot, error) {
-	return c.Store.Collection(group.Category()).Doc(group.Identifier()).Get(ctx)
+	return c.store.Collection(group.Category()).Doc(group.Identifier()).Get(ctx)
 }
 
 func (c *Client) DocRef(ctx context.Context, group api.Grouping) *firestore.DocumentRef {
-	return c.Store.Collection(group.Category()).Doc(group.Identifier())
+	return c.store.Collection(group.Category()).Doc(group.Identifier())
 }
 
 func (c *Client) MarshalDocTo(ctx context.Context, group api.Grouping, obj interface{}) error {
-	snap, err := c.Store.Collection(group.Category()).Doc(group.Identifier()).Get(ctx)
+	snap, err := c.store.Collection(group.Category()).Doc(group.Identifier()).Get(ctx)
 	if err != nil {
 		return err
 	}
@@ -54,7 +64,7 @@ func (c *Client) MarshalDocTo(ctx context.Context, group api.Grouping, obj inter
 }
 
 func (c *Client) DocDataAt(ctx context.Context, group api.Grouping, key string) (interface{}, error) {
-	snap, err := c.Store.Collection(group.Category()).Doc(group.Identifier()).Get(ctx)
+	snap, err := c.store.Collection(group.Category()).Doc(group.Identifier()).Get(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +72,7 @@ func (c *Client) DocDataAt(ctx context.Context, group api.Grouping, key string) 
 }
 
 func (c *Client) UpdateDocField(ctx context.Context, group api.Grouping, key string, value string) error {
-	_, err := c.Store.Collection(group.Category()).Doc(group.Identifier()).Update(ctx, []firestore.Update{
+	_, err := c.store.Collection(group.Category()).Doc(group.Identifier()).Update(ctx, []firestore.Update{
 		{
 			Path:  key,
 			Value: value,
@@ -75,7 +85,7 @@ func (c *Client) UpdateDocField(ctx context.Context, group api.Grouping, key str
 }
 
 func (c *Client) DocData(ctx context.Context, group api.Grouping) (map[string]interface{}, error) {
-	snap, err := c.Store.Collection(group.Category()).Doc(group.Identifier()).Get(ctx)
+	snap, err := c.store.Collection(group.Category()).Doc(group.Identifier()).Get(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +93,7 @@ func (c *Client) DocData(ctx context.Context, group api.Grouping) (map[string]in
 }
 
 func (c *Client) CreateDoc(ctx context.Context, group api.Grouping, data map[string]interface{}) error {
-	_, err := c.Store.Collection(group.Category()).Doc(group.Identifier()).Create(ctx, data)
+	_, err := c.store.Collection(group.Category()).Doc(group.Identifier()).Create(ctx, data)
 	if err != nil {
 		return err
 	}
@@ -91,7 +101,7 @@ func (c *Client) CreateDoc(ctx context.Context, group api.Grouping, data map[str
 }
 
 func (c *Client) DeleteDoc(ctx context.Context, group api.Grouping) error {
-	_, err := c.Store.Collection(group.Category()).Doc(group.Identifier()).Delete(ctx)
+	_, err := c.store.Collection(group.Category()).Doc(group.Identifier()).Delete(ctx)
 	if err != nil {
 		return err
 	}
