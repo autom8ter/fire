@@ -13,9 +13,9 @@ import (
 )
 
 type Client struct {
-	Tasks     *cloudtasks.Client
-	Publisher *pubsub.Client
-	Project   string
+	tsks *cloudtasks.Client
+	pub  *pubsub.Client
+	proj string
 }
 
 func NewClient(ctx context.Context, project string, opts ...option.ClientOption) (*Client, error) {
@@ -28,9 +28,9 @@ func NewClient(ctx context.Context, project string, opts ...option.ClientOption)
 		return nil, err
 	}
 	return &Client{
-		Tasks:     tasks,
-		Publisher: pub,
-		Project:   project,
+		tsks: tasks,
+		pub:  pub,
+		proj: project,
 	}, nil
 }
 
@@ -66,7 +66,7 @@ func (c *Client) CreateHTTPTask(ctx context.Context, h api.JSONTask) (*taskspb.T
 			},
 		},
 	}
-	createdTask, err := c.Tasks.CreateTask(ctx, req)
+	createdTask, err := c.tsks.CreateTask(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (c *Client) CreateHTTPTask(ctx context.Context, h api.JSONTask) (*taskspb.T
 }
 
 func (c *Client) QueuePath(location, que string) string {
-	return fmt.Sprintf("projects/%s/locations/%s/queues/%s", c.Project, location, que)
+	return fmt.Sprintf("projects/%s/locations/%s/queues/%s", c.proj, location, que)
 }
 
 func (c *Client) Publish(ctx context.Context, message api.Message) (string, error) {
@@ -122,13 +122,13 @@ func (c *Client) PublishProto(ctx context.Context, message api.ProtoMessage) (st
 }
 
 func (c *Client) GetTopic(ctx context.Context, cat api.Categorizer) (*pubsub.Topic, error) {
-	t := c.Publisher.Topic(cat.Category())
+	t := c.pub.Topic(cat.Category())
 	ok, err := t.Exists(ctx)
 	if err != nil {
 		return nil, err
 	}
 	if !ok {
-		t, err = c.Publisher.CreateTopic(ctx, cat.Category())
+		t, err = c.pub.CreateTopic(ctx, cat.Category())
 		if err != nil {
 			return nil, err
 		}

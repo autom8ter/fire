@@ -186,10 +186,10 @@ func (c *Client) UpdateBucket(ctx context.Context, cat api.Categorizer, attr sto
 	return c.Bucket(ctx, cat).Update(ctx, attr)
 }
 
-func (c *Client) BucketOsbject(ctx context.Context, cat api.Categorizer) (*storage.ObjectIterator) {
+func (c *Client) BucketOsbject(ctx context.Context, cat api.Categorizer) *storage.ObjectIterator {
 	return c.Bucket(ctx, cat).Objects(ctx, nil)
 }
 
-func (c *Client) Buckets(ctx context.Context) (*storage.BucketIterator) {
+func (c *Client) Buckets(ctx context.Context) *storage.BucketIterator {
 	return c.blob.Buckets(ctx, c.proj)
 }

@@ -13,6 +13,10 @@ type Client struct {
 	Tasks *tasks.Client `validate:"required"`
 }
 
+func (c *Client) Validate() error {
+	return util.Util.Validate(c)
+}
+
 type HandlerFunc func(c *Client) error
 
 func (c *Client) HandleFunc(fns ...HandlerFunc) error {
