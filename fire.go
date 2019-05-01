@@ -12,7 +12,7 @@ type Document interface {
 }
 
 type Client struct {
-	cli *firestore.Client
+	Fire *firestore.Client
 }
 
 func NewClient(ctx context.Context, projectID string) (*Client,error) {
@@ -21,7 +21,36 @@ func NewClient(ctx context.Context, projectID string) (*Client,error) {
 		return nil, err
 	}
 	return &Client{
-		cli: client,
+		Fire: client,
 		}, nil
 }
 
+func (c *Client) Set(ctx context.Context, d Document, merge bool) error {
+	if merge {
+		_, err :=c.Fire.Collection(d.DocCategory()).Doc(d.DocName()).Set(ctx, d.DocData(), firestore.MergeAll)
+		if err != nil {
+			return err
+		}
+		return nil
+	} else {
+		_, err :=c.Fire.Collection(d.DocCategory()).Doc(d.DocName()).Set(ctx, d.DocData())
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+}
+
+func (c *Client) Snapshot(ctx context.Context, d Document) (*firestore.DocumentSnapshot, error) {
+	return  c.Fire.Collection(d.DocCategory()).Doc(d.DocName()).Get(ctx)
+}
+func (c *Client) Ref(ctx context.Context, d Document) (*firestore.DocumentRef) {
+	return  c.Fire.Collection(d.DocCategory()).Doc(d.DocName())
+}
+func (c *Client) Create(ctx context.Context, d Document) (error) {
+	_, err :=  c.Fire.Collection(d.DocCategory()).Doc(d.DocName()).Create(ctx, d.DocData())
+	if err != nil {
+		return err
+	}
+	return nil
+}
