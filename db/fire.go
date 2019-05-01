@@ -112,6 +112,10 @@ func (c *Client) Object(ctx context.Context, group api.Grouping) *storage.Object
 	return c.blob.Bucket(group.Category()).Object(group.Identifier())
 }
 
+func (c *Client) CopyFromObject(ctx context.Context, from api.Grouping, to api.Grouping) *storage.Copier {
+	return c.blob.Bucket(to.Category()).Object(to.Identifier()).CopierFrom(c.Object(ctx, from))
+}
+
 func (c *Client) DeleteObject(ctx context.Context, group api.Grouping) error {
 	return c.Object(ctx, group).Delete(ctx)
 }
@@ -136,6 +140,10 @@ func (c *Client) GetObjectMetadata(ctx context.Context, metagroup api.MetaGroupi
 
 func (c *Client) Bucket(ctx context.Context, cat api.Categorizer) *storage.BucketHandle {
 	return c.blob.Bucket(cat.Category())
+}
+
+func (c *Client) CreateBucket(ctx context.Context, cat api.Categorizer) error {
+	return c.blob.Bucket(cat.Category()).Create(ctx, c.proj, nil)
 }
 
 func (c *Client) ObjectsBucketName(ctx context.Context, grp api.Grouping) string {
@@ -168,4 +176,20 @@ func (c *Client) CopyToObjectFrom(ctx context.Context, from io.Reader, grp api.G
 		return err
 	}
 	return nil
+}
+
+func (c *Client) DeleteBucket(ctx context.Context, cat api.Categorizer) error {
+	return c.Bucket(ctx, cat).Delete(ctx)
+}
+
+func (c *Client) UpdateBucket(ctx context.Context, cat api.Categorizer, attr storage.BucketAttrsToUpdate) (*storage.BucketAttrs, error) {
+	return c.Bucket(ctx, cat).Update(ctx, attr)
+}
+
+func (c *Client) BucketOsbject(ctx context.Context, cat api.Categorizer) (*storage.ObjectIterator) {
+	return c.Bucket(ctx, cat).Objects(ctx, nil)
+}
+
+func (c *Client) Buckets(ctx context.Context) (*storage.BucketIterator) {
+	return c.blob.Buckets(ctx, c.proj)
 }
