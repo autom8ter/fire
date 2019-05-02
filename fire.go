@@ -12,8 +12,8 @@ import (
 )
 
 type Client struct {
-	DB    *db.Client      `validate:"required"`
-	Tasks *publish.Client `validate:"required"`
+	db    *db.Client      `validate:"required"`
+	pub *publish.Client `validate:"required"`
 }
 
 func (c *Client) Validate() error {
@@ -40,12 +40,12 @@ func NewClient(ctx context.Context, project string, opts ...option.ClientOption)
 	if err != nil {
 		return nil, err
 	}
-	tsks, err := publish.NewClient(ctx, project, opts...)
+	p, err := publish.NewClient(ctx, project, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return &Client{
-		DB:    client,
-		Tasks: tsks,
+		db:    client,
+		pub: p,
 	}, nil
 }
