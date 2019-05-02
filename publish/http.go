@@ -32,23 +32,22 @@ func (c *Client) Publish(ctx context.Context, message driver.Message) (string, e
 		return "", err
 	}
 	r := t.Publish(ctx, &pubsub.Message{
-		ID:         message.Identifier(),
+		ID:         message.GetIdentifier(),
 		Data:       []byte(message.String()),
-		Attributes: message.Meta(),
+		Attributes: message.GetMeta(),
 	})
 
 	return r.Get(ctx)
 }
 
-
 func (c *Client) GetTopic(ctx context.Context, cat driver.Categorizer) (*pubsub.Topic, error) {
-	t := c.pub.Topic(cat.Category())
+	t := c.pub.Topic(cat.GetCategory())
 	ok, err := t.Exists(ctx)
 	if err != nil {
 		return nil, err
 	}
 	if !ok {
-		t, err = c.pub.CreateTopic(ctx, cat.Category())
+		t, err = c.pub.CreateTopic(ctx, cat.GetCategory())
 		if err != nil {
 			return nil, err
 		}

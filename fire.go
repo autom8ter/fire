@@ -4,9 +4,10 @@ package fire
 
 import (
 	"context"
+	"github.com/autom8ter/api/common"
 	"github.com/autom8ter/fire/db"
 	"github.com/autom8ter/fire/publish"
-	"github.com/autom8ter/fire/util"
+	"github.com/autom8ter/gosaas/util"
 	"google.golang.org/api/option"
 )
 
@@ -16,7 +17,7 @@ type Client struct {
 }
 
 func (c *Client) Validate() error {
-	return util.Util.Validate(c)
+	return common.Util.Validate(c)
 }
 
 type HandlerFunc func(c *Client) error

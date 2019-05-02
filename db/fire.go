@@ -39,7 +39,7 @@ func NewClient(ctx context.Context, projectID string, opts ...option.ClientOptio
 }
 
 func (c *Client) Collection(ctx context.Context, cat driver.Categorizer) *firestore.CollectionRef {
-	return c.store.Collection(cat.Category())
+	return c.store.Collection(cat.GetCategory())
 }
 
 func (c *Client) Collections(ctx context.Context) *firestore.CollectionIterator {
@@ -55,7 +55,7 @@ func (c *Client) DocSnapshot(ctx context.Context, group driver.Grouping) (*fires
 }
 
 func (c *Client) Document(ctx context.Context, group driver.Grouping) *firestore.DocumentRef {
-	return c.store.Collection(group.Category()).Doc(group.Identifier())
+	return c.store.Collection(group.GetCategory()).Doc(group.GetIdentifier())
 }
 
 func (c *Client) MarshalDocTo(ctx context.Context, group driver.Grouping, obj interface{}) error {
@@ -128,11 +128,11 @@ func (c *Client) SetDocData(ctx context.Context, group driver.Grouping, data map
 }
 
 func (c *Client) Object(ctx context.Context, group driver.Grouping) *storage.ObjectHandle {
-	return c.blob.Bucket(group.Category()).Object(group.Identifier())
+	return c.blob.Bucket(group.GetCategory()).Object(group.GetIdentifier())
 }
 
 func (c *Client) CopyFromObject(ctx context.Context, from driver.Grouping, to driver.Grouping) *storage.Copier {
-	return c.blob.Bucket(to.Category()).Object(to.Identifier()).CopierFrom(c.Object(ctx, from))
+	return c.blob.Bucket(to.GetCategory()).Object(to.GetIdentifier()).CopierFrom(c.Object(ctx, from))
 }
 
 func (c *Client) DeleteObject(ctx context.Context, group driver.Grouping) error {
@@ -141,7 +141,7 @@ func (c *Client) DeleteObject(ctx context.Context, group driver.Grouping) error 
 
 func (c *Client) UpdateObjectMetadata(ctx context.Context, metagroup driver.MetaGrouping) (*storage.ObjectAttrs, error) {
 	return c.Object(ctx, metagroup).Update(ctx, storage.ObjectAttrsToUpdate{
-		Metadata: metagroup.Meta(),
+		Metadata: metagroup.GetMeta(),
 	})
 }
 
@@ -158,11 +158,11 @@ func (c *Client) GetObjectMetadata(ctx context.Context, metagroup driver.MetaGro
 }
 
 func (c *Client) Bucket(ctx context.Context, cat driver.Categorizer) *storage.BucketHandle {
-	return c.blob.Bucket(cat.Category())
+	return c.blob.Bucket(cat.GetCategory())
 }
 
 func (c *Client) CreateBucket(ctx context.Context, cat driver.Categorizer) error {
-	return c.blob.Bucket(cat.Category()).Create(ctx, c.proj, nil)
+	return c.blob.Bucket(cat.GetCategory()).Create(ctx, c.proj, nil)
 }
 
 func (c *Client) ObjectsBucketName(ctx context.Context, grp driver.Grouping) string {

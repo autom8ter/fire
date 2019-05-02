@@ -2,9 +2,7 @@ module github.com/autom8ter/fire
 
 require (
 	cloud.google.com/go v0.37.4
-	github.com/autom8ter/api v0.0.0-20190501143320-647509aee1c4
-	github.com/autom8ter/objectify v0.0.0-20190501140836-9d479f635159
-	github.com/golang/protobuf v1.3.1
+	github.com/autom8ter/api v0.0.0-20190502051047-a1bf3cafcc4d
+	github.com/autom8ter/gosaas v0.0.0-20190430205619-84de27b80d84
 	google.golang.org/api v0.3.1
-	google.golang.org/genproto v0.0.0-20190418145605-e7d98fc518a7
 )
