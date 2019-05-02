@@ -5,13 +5,6 @@
 
 ## Usage
 
-#### type BucketHandlerFunc
-
-```go
-type BucketHandlerFunc func(b *storage.BucketHandle) error
-```
-
-
 #### type Client
 
 ```go
@@ -32,10 +25,10 @@ func NewClient(ctx context.Context, projectID string, opts ...option.ClientOptio
 func (c *Client) Bucket(ctx context.Context, cat driver.Categorizer) *storage.BucketHandle
 ```
 
-#### func (*Client) BucketOsbject
+#### func (*Client) BucketObject
 
 ```go
-func (c *Client) BucketOsbject(ctx context.Context, cat driver.Categorizer) *storage.ObjectIterator
+func (c *Client) BucketObject(ctx context.Context, cat driver.Categorizer) *storage.ObjectIterator
 ```
 
 #### func (*Client) Buckets
@@ -143,25 +136,25 @@ func (c *Client) GetObjectMetadata(ctx context.Context, metagroup driver.MetaGro
 #### func (*Client) HandleBucket
 
 ```go
-func (c *Client) HandleBucket(ctx context.Context, cat driver.Categorizer, fn BucketHandlerFunc) error
+func (c *Client) HandleBucket(ctx context.Context, cat driver.Categorizer, fn functions.BucketHandlerFunc) error
 ```
 
 #### func (*Client) HandleCollection
 
 ```go
-func (c *Client) HandleCollection(ctx context.Context, cat driver.Categorizer, fn CollectionHandlerFunc) error
+func (c *Client) HandleCollection(ctx context.Context, cat driver.Categorizer, fn functions.CollectionHandlerFunc) error
 ```
 
 #### func (*Client) HandleDocument
 
 ```go
-func (c *Client) HandleDocument(ctx context.Context, group driver.Grouping, fn DocumentHandlerFunc) error
+func (c *Client) HandleDocument(ctx context.Context, group driver.Grouping, fn functions.DocumentHandlerFunc) error
 ```
 
 #### func (*Client) HandleObject
 
 ```go
-func (c *Client) HandleObject(ctx context.Context, group driver.Grouping, fn ObjectHandlerFunc) error
+func (c *Client) HandleObject(ctx context.Context, group driver.Grouping, fn functions.ObjectHandlerFunc) error
 ```
 
 #### func (*Client) MarshalDocTo
@@ -222,24 +215,4 @@ func (c *Client) UpdateDocField(ctx context.Context, group driver.Grouping, key 
 
 ```go
 func (c *Client) UpdateObjectMetadata(ctx context.Context, metagroup driver.MetaGrouping) (*storage.ObjectAttrs, error)
-```
-
-#### type CollectionHandlerFunc
-
-```go
-type CollectionHandlerFunc func(b *firestore.CollectionRef) error
-```
-
-
-#### type DocumentHandlerFunc
-
-```go
-type DocumentHandlerFunc func(b *firestore.DocumentRef) error
-```
-
-
-#### type ObjectHandlerFunc
-
-```go
-type ObjectHandlerFunc func(b *storage.ObjectHandle) error
 ```

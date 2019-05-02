@@ -7,6 +7,7 @@ import (
 	"cloud.google.com/go/storage"
 	"context"
 	"github.com/autom8ter/api/driver"
+	"github.com/autom8ter/fire/functions"
 	"google.golang.org/api/option"
 	"io"
 )
@@ -16,11 +17,6 @@ type Client struct {
 	store *firestore.Client
 	blob  *storage.Client
 }
-
-type BucketHandlerFunc func(b *storage.BucketHandle) error
-type ObjectHandlerFunc func(b *storage.ObjectHandle) error
-type CollectionHandlerFunc func(b *firestore.CollectionRef) error
-type DocumentHandlerFunc func(b *firestore.DocumentRef) error
 
 func NewClient(ctx context.Context, projectID string, opts ...option.ClientOption) (*Client, error) {
 	client, err := firestore.NewClient(ctx, projectID, opts...)
@@ -205,7 +201,7 @@ func (c *Client) UpdateBucket(ctx context.Context, cat driver.Categorizer, attr 
 	return c.Bucket(ctx, cat).Update(ctx, attr)
 }
 
-func (c *Client) BucketOsbject(ctx context.Context, cat driver.Categorizer) *storage.ObjectIterator {
+func (c *Client) BucketObject(ctx context.Context, cat driver.Categorizer) *storage.ObjectIterator {
 	return c.Bucket(ctx, cat).Objects(ctx, nil)
 }
 
@@ -213,18 +209,18 @@ func (c *Client) Buckets(ctx context.Context) *storage.BucketIterator {
 	return c.blob.Buckets(ctx, c.proj)
 }
 
-func (c *Client) HandleBucket(ctx context.Context, cat driver.Categorizer, fn BucketHandlerFunc) error {
+func (c *Client) HandleBucket(ctx context.Context, cat driver.Categorizer, fn functions.BucketHandlerFunc) error {
 	return fn(c.Bucket(ctx, cat))
 }
 
-func (c *Client) HandleObject(ctx context.Context, group driver.Grouping, fn ObjectHandlerFunc) error {
+func (c *Client) HandleObject(ctx context.Context, group driver.Grouping, fn functions.ObjectHandlerFunc) error {
 	return fn(c.Object(ctx, group))
 }
 
-func (c *Client) HandleCollection(ctx context.Context, cat driver.Categorizer, fn CollectionHandlerFunc) error {
+func (c *Client) HandleCollection(ctx context.Context, cat driver.Categorizer, fn functions.CollectionHandlerFunc) error {
 	return fn(c.Collection(ctx, cat))
 }
 
-func (c *Client) HandleDocument(ctx context.Context, group driver.Grouping, fn DocumentHandlerFunc) error {
+func (c *Client) HandleDocument(ctx context.Context, group driver.Grouping, fn functions.DocumentHandlerFunc) error {
 	return fn(c.Document(ctx, group))
 }

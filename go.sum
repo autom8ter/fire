@@ -34,6 +34,8 @@ github.com/autom8ter/api v0.0.0-20190502045901-4fee2e4ad274 h1:hqpjjN9ze3tgsfAsY
 github.com/autom8ter/api v0.0.0-20190502045901-4fee2e4ad274/go.mod h1:ULyMaD1CMdGaEu0ydq1W+R/OjJlPk8MdE35q/xZIM5o=
 github.com/autom8ter/api v0.0.0-20190502051047-a1bf3cafcc4d h1:gYpDGniU1CWP0y6Pwxct1hj2/y98FgGmS/7HoJW2nr4=
 github.com/autom8ter/api v0.0.0-20190502051047-a1bf3cafcc4d/go.mod h1:ULyMaD1CMdGaEu0ydq1W+R/OjJlPk8MdE35q/xZIM5o=
+github.com/autom8ter/api v0.0.0-20190502054904-851eeda62faa h1:dcZVItynrgVbpBEjXibts0DWTP0EjE2p9BSSxQ/N9gI=
+github.com/autom8ter/api v0.0.0-20190502054904-851eeda62faa/go.mod h1:ULyMaD1CMdGaEu0ydq1W+R/OjJlPk8MdE35q/xZIM5o=
 github.com/autom8ter/auth0 v0.0.0-20190430004145-b2440501f266/go.mod h1:8xVHWZT9YUoPsCCv7HaSQApNG864VP9YfpT+u1ApPno=
 github.com/autom8ter/engine v0.0.0-20190430234925-4b7713eeec35 h1:jgEGqHmuR0/S1b4uTqBMYkJ+AvYi3htKdmYd5hOSHjU=
 github.com/autom8ter/engine v0.0.0-20190430234925-4b7713eeec35/go.mod h1:qvY+IVapL3OaKlon9dBea65SIMuVLSHxp+Wk5xFwXrc=
