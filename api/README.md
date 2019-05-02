@@ -5,6 +5,21 @@
 
 ## Usage
 
+#### type API
+
+```go
+type API interface {
+	Publisher
+	Documentor
+	Objector
+	Bucketor
+	Collector
+	Handler
+	Logger
+}
+```
+
+
 #### type Bucketor
 
 ```go

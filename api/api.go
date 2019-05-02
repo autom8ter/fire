@@ -12,6 +12,16 @@ import (
 	"io"
 )
 
+type API interface {
+	Publisher
+	Documentor
+	Objector
+	Bucketor
+	Collector
+	Handler
+	Logger
+}
+
 type Publisher interface {
 	GetTopic(ctx context.Context, cat driver.Categorizer) (*pubsub.Topic, error)
 	Publish(ctx context.Context, message driver.Message) (string, error)
